@@ -21,6 +21,7 @@ Options:
   -c, --color <column>  Color column (or NULL). [default: task_project]
   --no-legend           If set, always hide legend.
   --no-label            If set, disable task description labels.
+  --by-day              If set, display and split intervals by day.
 ' -> doc
 
 args <- docopt(doc)
@@ -43,7 +44,63 @@ df = df %>% replace_na(list(
     timew_interval_end=now()
 ))
 
-plot_df = df %>% mutate(begin_y=0, end_y=1)
+# Remove invalid intervals (just in case).
+df = df %>%
+    filter(timew_interval_start < timew_interval_end) %>% # positive intervals
+    distinct(timew_interval_start, .keep_all=TRUE)
+
+magic_monoday = NULL
+if (args$'--by-day') {
+    # Split datetimes into date and times.
+    df = df %>% mutate(
+        timew_interval_start_date=as_date(timew_interval_start),
+        timew_interval_end_date=as_date(timew_interval_end),
+        timew_interval_start_hms=hms::as.hms(timew_interval_start),
+        timew_interval_end_hms=hms::as.hms(timew_interval_end)
+    )
+
+    # Splits an interval into several that do not breaks daily boundaries.
+    # Result is stored as a string.
+    # - Intervals are separated by "--".
+    # - Each interval is "BEGIN_END", where BEGIN and END are datetimes.
+    make_daily_intervals <- function(start_date, end_date) {
+        curr_interval_start = start_date
+        curr_interval_end = ceiling_date(start_date, unit="days", change_on_boundary=TRUE) - seconds(1)
+        daily_df = tibble(start=curr_interval_start, end=curr_interval_end)
+
+        while (as_date(curr_interval_start) < as_date(end_date)) {
+            curr_interval_start = curr_interval_end + seconds(1)
+            curr_interval_end = min(end_date, ceiling_date(curr_interval_start, unit="days", change_on_boundary=TRUE) - seconds(1))
+            daily_df = daily_df %>% add_row(start=curr_interval_start, end=curr_interval_end)
+        }
+
+        daily_df = daily_df %>% mutate(interval=paste(start, '_', end, sep=''))
+        return(paste(daily_df$interval, collapse='--'))
+    }
+
+    monoday = df %>% filter(timew_interval_start_date == timew_interval_end_date)
+    multiday = df %>%
+        filter(timew_interval_start_date < timew_interval_end_date) %>% # only keep intervals spanning on multiple days
+        rowwise() %>% mutate(daily_intervals=make_daily_intervals(timew_interval_start, timew_interval_end)) %>% # compute a string representation of the interval split so intervals never cross the 00:00:00 boundary
+        separate_rows(daily_intervals, sep='--') %>% # create a row for each required interval
+        rowwise() %>% mutate(timew_interval_start=as_datetime(strsplit(daily_intervals, "_")[[1]][1]),     # update new_start and new_end as computed before.
+                             timew_interval_end = as_datetime(strsplit(daily_intervals, "_")[[1]][2])) %>% # in python, this would be daily_intervals.split('_')[0] and daily_intervals.split('_')[1]
+        select(-daily_intervals) %>% # remove temporary garbage
+        mutate( # update date/times that became invalid because of the split
+            timew_interval_start_date=as_date(timew_interval_start),
+            timew_interval_end_date=as_date(timew_interval_end),
+            timew_interval_start_hms=hms::as.hms(timew_interval_start),
+            timew_interval_end_hms=hms::as.hms(timew_interval_end)
+        )
+    magic_monoday = bind_rows(monoday, multiday)
+} else {
+    magic_monoday = df
+}
+
+plot_df = magic_monoday %>% mutate(
+    begin_y=0,
+    end_y=1,
+)
 color_column = args$'--color'
 
 # Generate the desired plot.
