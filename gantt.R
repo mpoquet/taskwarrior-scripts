@@ -1,4 +1,5 @@
-#!/usr/bin/env Rscript
+#!/usr/bin/env nix-shell
+#!nix-shell -i Rscript -A rEnv
 library(docopt)
 library(tidyverse)
 library(viridis)

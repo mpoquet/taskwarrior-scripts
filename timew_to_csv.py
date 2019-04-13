@@ -1,11 +1,11 @@
-#!/usr/bin/env python3
+#!/usr/bin/env nix-shell
+#!nix-shell -i python -A pyEnv
 '''Converts a timew JSON export to a convenient CSV to analyze and visualize.
 
 JSON entries with multiple tags are split into several CSV entries.'''
 import math
 import subprocess
 import sys
-import pprint
 import pandas as pd
 
 def is_entry_hooked_with_semantic_tags(tags):
