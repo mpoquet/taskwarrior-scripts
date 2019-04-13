@@ -4,6 +4,7 @@ library(docopt)
 library(tidyverse)
 library(viridis)
 library(ggrepel)
+library(lubridate)
 
 'Draw a Gantt chart.
 
@@ -38,7 +39,8 @@ df = df %>% replace_na(list(
     task_tags="unknown",
     task_project="unknown",
     task_status="unknown",
-    task_uuid="unknown"
+    task_uuid="unknown",
+    timew_interval_end=now()
 ))
 
 plot_df = df %>% mutate(begin_y=0, end_y=1)
