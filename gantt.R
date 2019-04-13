@@ -15,7 +15,6 @@ Options:
   --help                Show this screen.
   -o, --output <file>   Output Gantt image file.
   -i, --input <file>    Input CSV file. If unset, stdin is read instead.
-  -p, --prefix <pre>    Only show tags starting with <pre>.
   -w, --width <value>   Output image width. [default: 16]
   -h, --height <value>  Output image height. [default: 9]
   -c, --color <column>  Color column (or NULL). [default: task_project]
@@ -133,7 +132,7 @@ plot = plot + theme_bw() +
 
 # Remove legend?
 if (args$'--no-legend') {
-    plot = plot + guides(fill=FALSE, color=FALSE)
+    plot = plot + guides(fill=FALSE)
 }
 
 # Write output image.
