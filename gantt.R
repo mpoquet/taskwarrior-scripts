@@ -157,7 +157,7 @@ if (args$'--by-day') {
                                       hms::as.hms('22:00:00'),
                                       hms::as.hms('23:00:00')),
                      expand = c(0,0)) +
-        scale_y_date(date_breaks = "1 day", expand = c(0,0))
+        scale_y_date(date_breaks = "1 day", date_minor_breaks="1 day", expand = c(0,0))
 } else {
     plot = plot_df %>% ggplot() +
         geom_rect(aes_string(fill=color_column,
