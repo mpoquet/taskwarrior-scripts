@@ -53,7 +53,8 @@ def obtain_rich_df(taskw_df, timew_df):
 
     merged_df = pd.merge(new_df, taskw_df, on='task_uuid', how='left')
     merged_df['task_description'] = merged_df.apply(lambda row: describe_interval(row), axis=1)
-    merged_df.drop(['timew_tag'], axis=1, inplace=True)
+    if 'timew_tag' in merged_df:
+        merged_df.drop('timew_tag', axis=1, inplace=True)
     return merged_df
 
 # Read input JSON from stdin (should be a timewarrior export).
