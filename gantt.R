@@ -186,7 +186,8 @@ if (!args$'--no-label') {
 if (args$'--by-day') {
     plot = plot + theme_bw() +
         theme(panel.spacing = unit(c(0, 0, 0, 0), "null")) +
-        scale_fill_viridis(discrete=TRUE)
+        scale_fill_viridis(discrete=TRUE) +
+        labs(x="Time", y="Day")
 } else {
     plot = plot + theme_bw() +
         theme(panel.border = element_blank(),
